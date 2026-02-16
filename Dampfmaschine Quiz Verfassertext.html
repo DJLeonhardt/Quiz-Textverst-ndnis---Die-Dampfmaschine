@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fehler im Text korrigieren – Eisenbahn</title>
+
+<style>
+body{
+  font-family:Arial, sans-serif;
+  background:#f4f8ff;
+  padding:15px;
+  max-width:900px;
+  margin:auto;
+}
+h1{
+  text-align:center;
+  color:#003366;
+}
+#timer{
+  text-align:center;
+  font-size:1.3rem;
+  font-weight:bold;
+  margin-bottom:15px;
+}
+.satz{
+  background:white;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.15);
+}
+.satz:hover{
+  background:#eef4ff;
+}
+.korrekt{
+  background:#c8f7c5 !important;
+}
+input{
+  width:100%;
+  padding:8px;
+  margin-top:8px;
+}
+button{
+  margin-top:6px;
+  padding:6px;
+}
+.feedback{
+  font-weight:bold;
+  margin-top:5px;
+}
+.hinweis{
+  color:#b36b00;
+  font-style:italic;
+  margin-top:4px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>✏️ Fehler im Text korrigieren</h1>
+<div id="timer">Zeit: 10:00</div>
+
+<p><b>Arbeitsauftrag:</b><br>
+In diesem Text haben sich <u>5 inhaltliche Fehler</u> eingeschlichen.  
+Klicke einen falschen Satz an und <b>verbessere ihn</b>.  
+Nach <b>zwei Fehlversuchen</b> erhältst du einen Hinweis.</p>
+
+<div id="text"></div>
+<p id="status">Richtig korrigiert: 0 / 5</p>
+
+<script>
+/* ⏱️ TIMER */
+let timeLeft = 600;
+const timer = setInterval(()=>{
+  let m = Math.floor(timeLeft/60);
+  let s = timeLeft%60;
+  document.getElementById("timer").innerText =
+    `Zeit: ${m}:${s.toString().padStart(2,"0")}`;
+  timeLeft--;
+  if(timeLeft < 0){
+    clearInterval(timer);
+    alert("⏱️ Zeit abgelaufen!");
+  }
+},1000);
+
+/* TEXTDATEN */
+const saetze = [
+ {t:"Vor langer Zeit, als es noch keine Autos gab, wurde die erste Eisenbahn in Deutschland gebaut.", ok:true},
+
+ {t:"Die Menschen hatten eine neue Art zu reisen und Dinge zu transportieren.", ok:true},
+
+ {t:"Die erste deutsche Eisenbahnstrecke wurde im Jahr 1825 eröffnet.", ok:false,
+  must:["1835"],
+  forbidden:["1825"],
+  hint:"Überlege: In welchem Jahr begann die Eisenbahn in Deutschland wirklich?"},
+
+ {t:"Die Züge fuhren von Berlin nach München.", ok:false,
+  must:["nürnberg","fürth"],
+  forbidden:["berlin","münchen"],
+  hint:"Welche zwei bayerischen Städte waren die erste Strecke?"},
+
+ {t:"Die Strecke war nicht sehr lang, aber sie war der Anfang von etwas Großem.", ok:true},
+
+ {t:"Die Züge waren nicht so wie die modernen Züge von heute.", ok:true},
+
+ {t:"Sie waren elektrisch betrieben und fuhren mit Strom.", ok:false,
+  must:["dampf"],
+  forbidden:["elektr","strom"],
+  hint:"Wie wurden die ersten Züge angetrieben?"},
+
+ {t:"Die Menschen waren fasziniert von diesen schnaufenden Maschinen auf den Schienen.", ok:true},
+
+ {t:"Die Eisenbahn war nur für den Transport von Waren gedacht.", ok:false,
+  must:["menschen","waren"],
+  forbidden:["nur"],
+  hint:"Waren Züge nur für Güter da?"},
+
+ {t:"Sie erleichterte den Handel und half den Menschen, Dinge schneller zu bewegen.", ok:true},
+
+ {t:"Mit der Zeit wurden immer mehr Städte und Orte in Deutschland durch Eisenbahnen verbunden.", ok:true},
+
+ {t:"Dadurch konnten die Menschen langsamer und umständlicher reisen.", ok:false,
+  must:["schneller","einfach"],
+  forbidden:["langsamer","umständlich"],
+  hint:"Wie veränderte sich das Reisen durch die Eisenbahn?"},
+
+ {t:"Die Eisenbahn war eine große Veränderung für das Land.", ok:true}
+];
+
+let korrekt = 0;
+const textDiv = document.getElementById("text");
+
+saetze.forEach((s,i)=>{
+  const d = document.createElement("div");
+  d.className = "satz";
+  d.innerText = s.t;
+
+  if(!s.ok){
+    let versuche = 0;
+
+    d.onclick = () => {
+      if(d.classList.contains("korrekt")) return;
+
+      const input = document.createElement("input");
+      input.placeholder = "Verbessere den Satz";
+
+      const btn = document.createElement("button");
+      btn.innerText = "Überprüfen";
+
+      const fb = document.createElement("div");
+      fb.className = "feedback";
+
+      const hint = document.createElement("div");
+      hint.className = "hinweis";
+
+      btn.onclick = () => {
+        versuche++;
+        const text = input.value.toLowerCase();
+
+        const mustOK = s.must.every(m => text.includes(m));
+        const forbiddenOK = !s.forbidden.some(f => text.includes(f));
+
+        if(mustOK && forbiddenOK){
+          d.classList.add("korrekt");
+          fb.innerText = "✔ Inhaltlich richtig korrigiert";
+          korrekt++;
+          document.getElementById("status").innerText =
+            `Richtig korrigiert: ${korrekt} / 5`;
+          input.disabled = true;
+          btn.disabled = true;
+        } else {
+          fb.innerText = "✘ Noch nicht korrekt – prüfe den Inhalt.";
+          if(versuche === 2){
+            hint.innerText = "💡 Hinweis: " + s.hint;
+          }
+        }
+      };
+
+      d.appendChild(input);
+      d.appendChild(btn);
+      d.appendChild(fb);
+      d.appendChild(hint);
+      d.onclick = null;
+    };
+  }
+
+  textDiv.appendChild(d);
+});
+</script>
+
+</body>
+</html>
